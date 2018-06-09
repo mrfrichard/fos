@@ -1,3 +1,4 @@
+[map symbols loader.map]
 %include "load.inc"
 org OffsetOfLoader ;0100h
 
@@ -485,25 +486,19 @@ LABEL_PM_START:
     
 SetupPaging:
 ; setup PML4E
-    ;push    ecx
-    mov ecx, 271 * 2
-    mov     ax, SelectorFlatRW
-    mov     es, ax
-    mov     edi, PML4E_Base
+    mov ax, SelectorFlatRW
+    mov es, ax
+    mov edi, PML4E_Base
     mov eax, PDPTE_Base | PG_P | PG_USU | PG_RWW	
     stosd
-    mov     eax, 0
-    stosd
-.1:
-    stosd
-    loop    .1
+    mov ecx, 271 * 2 + 1
+    mov eax, 0
+    rep stosd
     mov eax, PDPTE_Base | PG_P | PG_USU | PG_RWW
     stosd
     mov ecx, 239 * 2 + 1
     mov eax, 0
-.2:
-    stosd
-    loop .2
+    rep stosd
 
 ; setup PDPTE
     mov     edi, PDPTE_Base
@@ -511,48 +506,29 @@ SetupPaging:
     stosd
     mov ecx, 1023
     mov eax, 0
-.3:
-    stosd
-    loop .3
+    rep stosd
 
 ; setup PDE
-    mov     edi, PDE_Base
-    mov     eax, PTE_Base | PG_P | PG_USU | PG_RWW
-    mov ecx, BasePTENum
-.4:
+    mov edi, PDE_Base
+    mov eax, PTE_Base | PG_P | PG_USU | PG_RWW
     stosd
-    push eax
+    mov ecx, 1023
     mov eax, 0
-    stosd
-    pop eax
-    add eax, 4096
-    loop .4
-    
-    mov ecx, OtherPTENum * 2
-    mov eax, 0
-.5:
-    stosd
-    loop .5
+    rep stosd
 
 ; setup PTE
     mov edi, PTE_Base
-    mov ebx, BasePTENum
-.6:
-    xor     eax, eax
-    mov     eax, PG_P | PG_USU | PG_RWW
-    mov ecx, 512
-.7:
+    mov eax, PG_P | PG_USU | PG_RWW
+    mov ecx, 0xc0
+.1:
     stosd
     push eax
     mov eax, 0
     stosd
     pop eax
     add eax, 4096
-    loop .7
-    dec ebx
-    cmp ebx, 0
-    ja .6
-
+    loop .1
+    
     mov     eax, PML4E_Base
     mov     cr3, eax
 
@@ -597,25 +573,23 @@ to_long_mod:
 bit642:
 ;InitKernel
     xor rsi, rsi
-    mov cx, word [BaseOfKernelFilePhyAddr + 38h]
+    mov cx, word [BaseOfKernelFilePhyAddr + 38h]    ; Elf64_Half    (4 bytes)   e_phnum         程序头表中的项数。生成的 e_phentsize 和 e_phnum 指定了表的大小（以字节为单位）。如果文件没有程序头表，则 e_phnum 值为零。
     movzx rcx, cx;
-    mov r8w, [BaseOfKernelFilePhyAddr + 36h]
+    mov r8w, [BaseOfKernelFilePhyAddr + 36h]        ; Elf64_Half    (4 bytes)   e_phentsize     文件的程序头表中某一项的大小（以字节为单位）。所有项的大小都相同。
     movzx r8, r8w
-    mov r10, [BaseOfKernelFilePhyAddr + 20h]
+    mov r10, [BaseOfKernelFilePhyAddr + 20h]        ; Elf64_Off     (16 bytes)  e_shoff         节头表的文件偏移（以字节为单位）。如果文件没有节头表，则此成员值为零。
     add r10, BaseOfKernelFilePhyAddr
 .Begin:
-    mov eax, [r10 + 0]
-    cmp eax, 0
+    mov eax, [r10 + 0]                              ; Elf64_Word    p_type      此数组元素描述的段类型或解释此数组元素的信息的方式。表 7–25 中指定了类型值及其含义。
+    cmp eax, 0                                      ; p_type = PT_NULL(0)       未使用。没有定义成员值。使用此类型，程序头表可以包含忽略的项。
     jz .NoAction
     mov r9, rcx
-    mov rcx, [r10 + 020h]
-    mov rdi, [r10 + 10h]
-    mov rax, [r10 + 08h]
+    mov rcx, [r10 + 020h]                           ; Elf64_Xword   p_filesz    段的文件映像中的字节数，可以为零。
+    mov rdi, [r10 + 10h]                            ; Elf64_Addr    p_vaddr     段的第一个字节在内存中的虚拟地址
+    mov rax, [r10 + 08h]                            ; Elf64_Off     p_offset    相对段的第一个字节所在文件的起始位置的偏移
     add rax, BaseOfKernelFilePhyAddr
-;    push rsi
     mov rsi, rax
     rep movsb
-;    pop rsi
     mov rcx, r9
     
 .NoAction:

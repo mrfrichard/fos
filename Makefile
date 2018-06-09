@@ -4,6 +4,7 @@
 # It must be as same as 'KernalEntryPointPhyAddr' in load.inc
 ENTRYPOINT		= 0xffff880000010000
 BSS				= 0xffff880000020000
+DATA			= 0xffff880000050000
 
 #Offset of entry point in kernel file
 #It depends on ENTRYPOINT
@@ -16,8 +17,9 @@ CC			= gcc
 LD			= ld
 ASMBFLAGS	= -I boot/inc/
 ASMKFLAGS	= -I include/ -f elf64
-CFLAGS		= -I include -c -fno-builtin -fno-stack-protector -Wall #-static -O3 -DNDEBUG
-LDFLAGS		= -n -m elf_x86_64 -s -Ttext $(ENTRYPOINT) -Tbss $(BSS) -Map=kernel.map
+CFLAGS		= -I include -Wall -c -fno-builtin -fno-stack-protector -fstrength-reduce \
+              -fomit-frame-pointer -finline-functions -nostdinc -static #-O3 -DNDEBUG
+LDFLAGS		= -n -m elf_x86_64 -s -x -Ttext $(ENTRYPOINT) -Tbss $(BSS) -Tdata $(DATA) -Map=kernel.map -dn
 DASMFLAGS	= -u -o $(ENTRYPOINT) -e $(ENTRYOFFSET)
 
 # Img
@@ -33,7 +35,7 @@ FOSLoader	= loader.bin
 FOSKernel	= kernel.bin
 
 OBJS			= kernel/kernel.o kernel/global.o kernel/start.o kernel/i8259.o kernel/protect.o lib/klib.o lib/string.o lib/klibc.o \
-                kernel/main.o kernel/proc.o kernel/clock.o #kernel/syscall.o  kernel/keyboard.o kernel/tty.o kernel/console.o \
+                kernel/main.o kernel/proc.o kernel/clock.o kernel/mm.o #kernel/syscall.o  kernel/keyboard.o kernel/tty.o kernel/console.o \
 DASMOUTPUT		= kernel.bin.asm
 
 # All Phony Targets
@@ -94,7 +96,7 @@ kernel/start.o : kernel/start.c include/type.h include/protect.h include/proto.h
 kernel/i8259.o : kernel/i8259.c include/i8259.h include/type.h include/protect.h include/proto.h include/global.h include/const.h include/string.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/protect.o : kernel/protect.c include/protect.h include/type.h include/global.h include/const.h include/proto.h
+kernel/protect.o : kernel/protect.c include/protect.h include/type.h include/global.h include/const.h include/proto.h include/mm.h
 	$(CC) $(CFLAGS) -mcmodel=large -o $@ $<
 
 kernel/global.o : kernel/global.c include/global.h include/type.h include/protect.h include/const.h include/main.h include/proc.h
@@ -109,8 +111,11 @@ kernel/proc.o : kernel/proc.c include/proc.h include/type.h include/const.h incl
 kernel/clock.o : kernel/clock.c include/clock.h include/type.h include/const.h include/protect.h include/global.h include/proto.h  include/i8259.h include/proc.h 
 	$(CC) $(CFLAGS) -o $@ $<
 
+kernel/mm.o : kernel/mm.c include/mm.h include/type.h include/const.h include/proto.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 lib/klib.o : lib/klib.asm
-	$(ASM) $(ASMKFLAGS) -o $@ $<
+	$(ASM) $(ASMKFLAGS) -o $@ $< 
 
 lib/string.o : lib/string.asm
 	$(ASM) $(ASMKFLAGS) -o $@ $<

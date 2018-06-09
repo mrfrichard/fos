@@ -17,5 +17,3 @@ PTE_Base        equ 3000h
 
 BaseMemSize     equ 1000000h
 PDESize         equ 200000h
-BasePTENum      equ BaseMemSize / PDESize
-OtherPTENum     equ 512 - BasePTENum

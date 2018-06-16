@@ -62,7 +62,7 @@ PUBLIC void exception_handler (
     }
 }
 
-PUBLIC void init_idt_desc(
+PRIVATE void init_idt_desc(
     T8 vector
     , T8 desc_type
     , IntHandler handler
@@ -165,17 +165,4 @@ PUBLIC void init_prot() {
         , sizeof(tss)
         , DA_386TSS
     );
-
-//    int selector_ldt_index = INDEX_LDT_FIRST;
-    
-    /*for (int i = 0; i < NR_TASKS + NR_PROCS; i++) {
-        init_descriptor(
-            &gdt[selector_ldt_index]
-            , vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[i].ldts)
-            , LDT_SIZE * sizeof(DESCRIPTOR)
-            , DA_LDT
-        );
-        selector_ldt_index ++;
-    }*/
-    
 } 

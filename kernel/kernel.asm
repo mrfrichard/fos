@@ -65,9 +65,11 @@ global restart
 
 _start:
     mov rsp, StackTop
-    sgdt [rel gdtPtr]
+    mov rax, gdtPtr
+    sgdt [rax]
     call cstart
-    lgdt [rel gdtPtr]
+    mov rax, gdtPtr
+    lgdt [rax]
     lidt [rel idtPtr]
 
     mov rax, SELECTOR_FLAT_RW

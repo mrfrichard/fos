@@ -18,8 +18,9 @@ LD			= ld
 ASMBFLAGS	= -I boot/inc/
 ASMKFLAGS	= -I include/ -f elf64
 CFLAGS		= -I include -Wall -c -fno-builtin -fno-stack-protector -fstrength-reduce \
-              -fomit-frame-pointer -finline-functions -nostdinc -static #-O3 -DNDEBUG
-LDFLAGS		= -n -m elf_x86_64 -s -x -Ttext $(ENTRYPOINT) -Tbss $(BSS) -Tdata $(DATA) -Map=kernel.map -dn
+              -fomit-frame-pointer -finline-functions -nostdinc -static -O -mcmodel=large # -DNDEBUG
+#LDFLAGS		= -n -m elf_x86_64 -s -x -Ttext $(ENTRYPOINT) -Tbss $(BSS) -Tdata $(DATA) -Map=kernel.map -dn
+LDFLAGS		= -n -m elf_x86_64 -s -x -Tld.lds -Map=kernel.map
 DASMFLAGS	= -u -o $(ENTRYPOINT) -e $(ENTRYOFFSET)
 
 # Img
@@ -97,13 +98,13 @@ kernel/i8259.o : kernel/i8259.c include/i8259.h include/type.h include/protect.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 kernel/protect.o : kernel/protect.c include/protect.h include/type.h include/global.h include/const.h include/proto.h include/mm.h
-	$(CC) $(CFLAGS) -mcmodel=large -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
 kernel/global.o : kernel/global.c include/global.h include/type.h include/protect.h include/const.h include/main.h include/proc.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 kernel/main.o : kernel/main.c include/main.h include/type.h include/const.h include/proto.h include/clock.h include/proc.h include/global.h include/string.h
-	$(CC) $(CFLAGS) -mcmodel=large -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $<
 
 kernel/proc.o : kernel/proc.c include/proc.h include/type.h include/const.h include/protect.h include/global.h
 	$(CC) $(CFLAGS) -o $@ $<

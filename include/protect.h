@@ -176,6 +176,13 @@ typedef struct s_tss64 {
 #define KEY_BOARD_IRQ   1
 
 PUBLIC void init_prot();
-PUBLIC T32 seg2phys(T16 seg);
+PUBLIC void exception_handler (
+    T64 vec_no
+    , T64 err_code
+    , T64 rip
+    , T64 cs
+    , T64 eflags
+    );
+
 
 #endif /* _FOS_PROTECT_H_ */

@@ -10,7 +10,7 @@ romimage: file=D:\bochs\BIOS-bochs-latest
 vgaromimage: file=D:\bochs\VGABIOS-lgpl-latest
 
 # what disk images will be used 
-floppya: 1_44=fos.img, status=inserted
+floppya: 1_44=release\img\fos.img, status=inserted
 
 # hard disk
 #ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14

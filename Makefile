@@ -3,7 +3,7 @@
 # Entry point of Tinix
 # It must be as same as 'KernalEntryPointPhyAddr' in load.inc
 ENTRYPOINT		= 0xffff880000010000
-BSS				= 0xffff880000020000
+BSS			= 0xffff880000020000
 DATA			= 0xffff880000050000
 
 #Offset of entry point in kernel file
@@ -15,9 +15,9 @@ ASM			= nasm
 DASM		= ndisasm
 CC			= gcc
 LD			= ld
-ASMBFLAGS	= -I boot/inc/
-ASMKFLAGS	= -I include/ -f elf64
-CFLAGS		= -I include -Wall -c -fno-builtin -fno-stack-protector -fstrength-reduce \
+ASMBFLAGS	= -I src/boot/inc/
+ASMKFLAGS	= -I src/include/ -f elf64
+CFLAGS		= -I src/include -Wall -c -fno-builtin -fno-stack-protector -fstrength-reduce \
               -fomit-frame-pointer -finline-functions -nostdinc -static -O -mcmodel=large # -DNDEBUG
 #LDFLAGS		= -n -m elf_x86_64 -s -x -Ttext $(ENTRYPOINT) -Tbss $(BSS) -Tdata $(DATA) -Map=kernel.map -dn
 LDFLAGS		= -n -m elf_x86_64 -s -x -Tld.lds -Map=kernel.map
@@ -31,12 +31,12 @@ LOOPDEV		= $(shell losetup -f)
 MOUNTDIR	= /mnt/a
 
 # This Program 
-FOSBoot		= boot.bin
-FOSLoader	= loader.bin
-FOSKernel	= kernel.bin
+FOSBoot		= release/bin/boot.bin
+FOSLoader	= release/bin/loader.bin
+FOSKernel	= release/bin/kernel.bin
 
-OBJS			= kernel/kernel.o kernel/global.o kernel/start.o kernel/i8259.o kernel/protect.o lib/klib.o lib/string.o lib/klibc.o \
-                kernel/main.o kernel/proc.o kernel/clock.o kernel/mm.o #kernel/syscall.o  kernel/keyboard.o kernel/tty.o kernel/console.o \
+OBJS			= o/kernel.o o/global.o o/start.o o/i8259.o o/protect.o o/klib.o o/string.o o/klibc.o \
+                o/main.o o/proc.o o/clock.o o/mm.o #kernel/syscall.o  kernel/keyboard.o kernel/tty.o kernel/console.o \
 DASMOUTPUT		= kernel.bin.asm
 
 # All Phony Targets
@@ -60,66 +60,67 @@ clean :
 	rm -f $(OBJS)
 
 realclean :
-	rm -f $(OBJS) $(TINIXBoot) $(TINIXKernel)
+	rm -f $(OBJS) $(FOSBoot) $(FOSLoader) $(FOSKernel)
 
 disasm :
-	$(DASM) $(DASMFLAGS) $(TINIXKernel) > $(DASMOUTPUT)
+	$(DASM) $(DASMFLAGS) $(FOSKernel) > $(DASMOUTPUT)
 
 createimg:
 	dd if=/dev/zero of=$(WORKIMG) bs=512 count=2880; \
 	losetup $(LOOPDEV) $(WORKIMG); \
 	mkfs.msdos $(LOOPDEV); \
 	losetup -d $(LOOPDEV); \
-	dd if=boot.bin of=$(WORKIMG) bs=512 count=1 conv=notrunc
+	dd if=$(FOSBoot) of=$(WORKIMG) bs=512 count=1 conv=notrunc
 	
 buildimg:
 	mount $(WORKIMG) /mnt/a -o loop; \
-	cp -f loader.bin /mnt/a; \
-	cp -f kernel.bin /mnt/a; \
+	cp -f $(FOSLoader) /mnt/a; \
+	cp -f $(FOSKernel) /mnt/a; \
 	umount /mnt/a; \
-	cp $(WORKIMG) .
+	cp $(WORKIMG) ./release/img
 
-$(FOSBoot) : boot/boot.asm boot/inc/load.inc boot/inc/fat12hdr.inc
+$(FOSBoot) : src/boot/boot.asm src/boot/inc/load.inc src/boot/inc/fat12hdr.inc
 	$(ASM) $(ASMBFLAGS) -o $@ $<
 
-$(FOSLoader) : boot/loader.asm boot/inc/load.inc boot/inc/fat12hdr.inc boot/inc/pm.inc boot/inc/lib.inc
+$(FOSLoader) : src/boot/loader.asm src/boot/inc/load.inc src/boot/inc/fat12hdr.inc src/boot/inc/pm.inc src/boot/inc/lib.inc
 	$(ASM) $(ASMBFLAGS) -o $@ $<
 
 $(FOSKernel) : $(OBJS)
 	$(LD) $(LDFLAGS) -o $(FOSKernel) $(OBJS)
 
-kernel/kernel.o : kernel/kernel.asm # include/sconst.inc
+o/kernel.o : src/kernel/kernel.asm # include/sconst.inc
 	$(ASM) $(ASMKFLAGS) -o $@ $<
 
-kernel/start.o : kernel/start.c include/type.h include/protect.h include/proto.h include/string.h 
+o/start.o : src/kernel/start.c src/include/type.h src/include/protect.h src/include/proto.h src/include/string.h src/include/mm.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/i8259.o : kernel/i8259.c include/i8259.h include/type.h include/protect.h include/proto.h include/global.h include/const.h include/string.h
+o/i8259.o : src/kernel/i8259.c src/include/i8259.h src/include/type.h src/include/protect.h src/include/proto.h src/include/global.h src/include/const.h src/include/string.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/protect.o : kernel/protect.c include/protect.h include/type.h include/global.h include/const.h include/proto.h include/mm.h
+o/protect.o : src/kernel/protect.c src/include/protect.h src/include/type.h src/include/global.h src/include/const.h src/include/proto.h src/include/mm.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/global.o : kernel/global.c include/global.h include/type.h include/protect.h include/const.h include/main.h include/proc.h
+o/global.o : src/kernel/global.c src/include/global.h src/include/type.h src/include/protect.h src/include/const.h src/include/main.h src/include/proc.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/main.o : kernel/main.c include/main.h include/type.h include/const.h include/proto.h include/clock.h include/proc.h include/global.h include/string.h
+o/main.o : src/kernel/main.c src/include/main.h src/include/type.h src/include/const.h src/include/proto.h src/include/clock.h src/include/proc.h src/include/global.h \
+				src/include/string.h src/include/mm.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/proc.o : kernel/proc.c include/proc.h include/type.h include/const.h include/protect.h include/global.h
+o/proc.o : src/kernel/proc.c src/include/proc.h src/include/type.h src/include/const.h src/include/protect.h src/include/global.h src/include/mm.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/clock.o : kernel/clock.c include/clock.h include/type.h include/const.h include/protect.h include/global.h include/proto.h  include/i8259.h include/proc.h 
+o/clock.o : src/kernel/clock.c src/include/clock.h src/include/type.h src/include/const.h src/include/protect.h src/include/global.h src/include/proto.h  src/include/i8259.h src/include/proc.h 
 	$(CC) $(CFLAGS) -o $@ $<
 
-kernel/mm.o : kernel/mm.c include/mm.h include/type.h include/const.h include/proto.h
+o/mm.o : src/kernel/mm.c src/include/mm.h src/include/type.h src/include/const.h src/include/proto.h src/include/proc.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-lib/klib.o : lib/klib.asm
+o/klib.o : src/lib/klib.asm
 	$(ASM) $(ASMKFLAGS) -o $@ $< 
 
-lib/string.o : lib/string.asm
+o/string.o : src/lib/string.asm
 	$(ASM) $(ASMKFLAGS) -o $@ $<
 
-lib/klibc.o : lib/klib.c include/type.h include/proto.h include/const.h include/string.h
+o/klibc.o : src/lib/klib.c src/include/type.h src/include/proto.h src/include/const.h src/include/string.h
 	$(CC) $(CFLAGS) -o $@ $<

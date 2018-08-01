@@ -16,7 +16,7 @@ PUBLIC void* kmalloc(int size) {
     MEM_BLOCK* pblock =  (MEM_BLOCK*)KERNEL_DYNAMIC_MEM_BASE;
     void* p = NULL;
     int _size = size + sizeof(int);
-    
+
     MCS_LOCK me;
     lock_mcs(&p_mm_lock, &me);
 

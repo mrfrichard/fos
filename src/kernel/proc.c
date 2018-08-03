@@ -2,9 +2,10 @@
 #include "global.h"
 #include "mm.h"
 
-T64 pid = 0;
+pid = 0;
+tid = 0;
 
-PUBLIC PROCESS* createProcess(T64 pml4e, char* p_name, T32 priority, T32 nr_tty) {
+PUBLIC PROCESS* createProcess(T64 pml4e, char* p_name, T64 priority, T64 nr_tty) {
 	PROCESS* p = (PROCESS*)kmalloc(sizeof(PROCESS));
 	p->pml4e = pml4e;
 	p->pid = pid;

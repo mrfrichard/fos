@@ -4,6 +4,7 @@
 #include "const.h"
 #include "type.h"
 #include "proto.h"
+#include "protect.h"
 
 #define STACK_SIZE_TESTA    (0x8000)
 #define STACK_SIZE_TESTB    (0x8000)
@@ -127,25 +128,24 @@ typedef struct s_proc {
     T64         pml4e;
     T64         pid;
     char*       p_name;
-    T32			priority;
-    T32         nr_tty;
-    struct s_thread* threads;
+    T64			priority;
+    T64         nr_tty;
+    LINK_NODE*  threads;
 } PROCESS;
 
 typedef struct s_thread {
     STACK_FRAME regs;
     PROCESS*    pprocess;
-    T32         tid;
-    int         ticks;
-    int         priority;
+    T64         tid;
+	T64         ticks;
+	T64         priority;
 } THREAD;
 
-
 typedef struct s_task {
-    TaskFun     initial_eip;
+    TaskFun     initial_rip;
     int         stacksize;
     char        name[PROC_NAME_LEN];
-    int         priority;
+	T64         priority;
 } TASK;
 
 typedef struct _mcs_lock_t
@@ -226,4 +226,46 @@ static inline int trylock_mcs(MCS_LOCK** m, MCS_LOCK* me)
 	return EBUSY;
 }
 
+T64 pid;
+T64 tid;
+
+static inline THREAD* createThread(T64 cs, T64 fs, T64 ss, T64 gs, T64 rip, T64 rsp, T64 flags, T64 priority) {
+	THREAD* pthread = (THREAD*)kmalloc(sizeof(THREAD));
+	pthread->tid = tid;
+	pthread->regs.cs = cs;
+	pthread->regs.fs = fs;
+	pthread->regs.ss = ss;
+	pthread->regs.gs = gs;
+	pthread->regs.rip = rip;
+	pthread->regs.rsp = rsp;
+	pthread->regs.eflags = flags;
+	pthread->ticks = pthread->priority = priority;
+	tid ++;
+}
+
+static inline THREAD* createThread(T8 rpl, T64 rip, T64 rsp, T64 flags, T64 priority) {
+	return createThread(
+			((8 * INDEX_USER_C) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
+			, ((8 * INDEX_USER_RW) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
+			, ((8 * INDEX_USER_RW) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
+            , (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl
+			, rip, rsp, flags, priority
+			);
+}
+
+static inline PUBLIC PROCESS* createProcess(T64 pml4e, char* p_name, T64 priority, T64 nr_tty) {
+	PROCESS* p = (PROCESS*)kmalloc(sizeof(PROCESS));
+	p->pml4e = pml4e;
+	p->pid = pid;
+	p->p_name = p_name;
+	p->priority = priority;
+	p->nr_tty = nr_tty;
+	p->threads = NULL;
+	pid++;
+	return p;
+}
+
+static inline void attachThread(PROCESS* process, THREAD* thread) {
+
+}
 #endif /* _FOS_PROC_H_ */

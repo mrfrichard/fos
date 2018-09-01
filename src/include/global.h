@@ -17,11 +17,6 @@ EXTERN T8 idtPtr[10];
 EXTERN Gate idt[IDT_SIZE];
 EXTERN Tss64 tss;
 
-EXTERN PUBLIC THREAD proc_table[NR_TASKS];
-EXTERN THREAD* p_proc_ready;
-
-EXTERN PUBLIC T8 task_stack[STACK_SIZE_TOTAL];
-
 EXTERN int k_reenter;
 
 EXTERN PUBLIC TASK task_table[NR_TASKS];

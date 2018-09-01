@@ -8,14 +8,19 @@ PUBLIC T8 inb(TPort port);
 PUBLIC int disable_irq(int irq);
 PUBLIC void enable_irq(int irq);
 
-
-PUBLIC void disp_color_str(int color, char* pszinfo);
+PUBLIC void disp_color_str_pos(unsigned short color, char* pszinfo, unsigned pos);
+PUBLIC void disp_color_str(unsigned short  color, char* pszinfo);
 PUBLIC void disp_str(char* pszinfo);
+PUBLIC void disp_str_pos(char* pszinfo, unsigned pos);
 
-PUBLIC void disp_int(int v);
 PUBLIC char* itoa(char *str, int num);
 PUBLIC void disp_T64(T64 v);
 PUBLIC char* ltoa(char *str, T64 num);
+
+PUBLIC void disp_int(int v);
+PUBLIC void disp_T64(T64 v);
+PUBLIC void disp_int_pos(int v, unsigned pos);
+PUBLIC void disp_T64_pos(T64 v, unsigned pos);
 
 
 PUBLIC void hwint00();

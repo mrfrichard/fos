@@ -5,17 +5,19 @@ disp_pos dq 0
 [section .text]
 
 [BITS 64]
+global disp_color_str_pos
 global disp_color_str
 global disp_str
+global disp_str_pos
 global outb
 global inb
 global disable_irq
 global enable_irq
 
-disp_color_str:
+disp_color_str_pos:
     mov rax, rdi
     mov ah, al
-    mov rdi, [rel disp_pos]
+    mov rdi, rdx
 .21:
     lodsb
     test al, al
@@ -39,13 +41,26 @@ disp_color_str:
     jmp .21
 
 .22:
-    mov [rel disp_pos], rdi
+    mov rax, rdi
+    ret
+
+disp_color_str:
+    mov rdx, [rel disp_pos]
+    call disp_color_str_pos
+    mov [rel disp_pos], rax
     ret
 
 disp_str:
     mov rsi, rdi
     mov rdi, 0Fh 
     call disp_color_str
+    ret
+
+disp_str_pos:
+    mov rdx, rsi
+    mov rsi, rdi
+    mov rdi, 0Fh
+    call disp_color_str_pos
     ret
 
 outb:

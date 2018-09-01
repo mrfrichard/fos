@@ -5,10 +5,9 @@
 #include "type.h"
 #include "proto.h"
 #include "protect.h"
+#include "link.h"
 
-#define STACK_SIZE_TESTA    (0x8000)
-#define STACK_SIZE_TESTB    (0x8000)
-#define STACK_SIZE_TESTC    (0x8000)
+#define STACK_SIZE    		(0x8000)
 #define STACK_SIZE_TTY      (0x8000)
 
 
@@ -98,6 +97,7 @@ static inline unsigned long __cmpxchg(volatile void *ptr, unsigned long old, uns
 }
 
 typedef struct s_stackframe {
+    T64 reserve;
     T64 gs;
     T64 fs;
     T64 r15;
@@ -111,7 +111,6 @@ typedef struct s_stackframe {
     T64 rdi;
     T64 rsi;
     T64 rbp;
-//    T64 kernel_esp;
     T64 rbx;
     T64 rdx;
     T64 rcx;
@@ -125,12 +124,12 @@ typedef struct s_stackframe {
 } STACK_FRAME;
 
 typedef struct s_proc {
-    T64         pml4e;
-    T64         pid;
-    char*       p_name;
-    T64			priority;
-    T64         nr_tty;
-    LINK_NODE*  threads;
+    T64     pml4e;
+    T64     pid;
+    char*   p_name;
+    T64		priority;
+    T64     nr_tty;
+    LINK*	threads;
 } PROCESS;
 
 typedef struct s_thread {
@@ -154,10 +153,17 @@ typedef struct _mcs_lock_t
 	int spin;
 } MCS_LOCK;
 
+T64 pid;
+T64 tid;
+PUBLIC LINK thread_ready_link;
+PUBLIC THREAD* p_proc_ready;
 
 PUBLIC unsigned int sys_get_ticks();
 PUBLIC void schedule();
-PUBLIC PROCESS* createProcess(T64 pml4e, char* p_name, T32 priority, T32 nr_tty);
+
+static inline void initThreadLink() {
+	createLink(&thread_ready_link);
+}
 
 static inline void lock_mcs(MCS_LOCK** m, MCS_LOCK* me)
 {
@@ -226,46 +232,69 @@ static inline int trylock_mcs(MCS_LOCK** m, MCS_LOCK* me)
 	return EBUSY;
 }
 
-T64 pid;
-T64 tid;
+static inline THREAD* _createThread(T64 cs, T64 fs, T64 ss, T64 gs, T64 rip, T64 rsp, T64 flags, T64 priority) {
+	THREAD* pthread = (THREAD*)kmallocAlign16(sizeof(THREAD));
+	if (pthread != NULL) {
+        pthread->tid = tid;
+        pthread->regs.cs = cs;
+        pthread->regs.fs = fs;
+        pthread->regs.ss = ss;
+        pthread->regs.gs = gs;
+        pthread->regs.rip = rip;
+        pthread->regs.rsp = rsp;
+        pthread->regs.eflags = flags;
+        pthread->ticks = pthread->priority = priority;
+        tid ++;
+	} else {
+        disp_color_str(RED, "create thread failed/n");
+	}
 
-static inline THREAD* createThread(T64 cs, T64 fs, T64 ss, T64 gs, T64 rip, T64 rsp, T64 flags, T64 priority) {
-	THREAD* pthread = (THREAD*)kmalloc(sizeof(THREAD));
-	pthread->tid = tid;
-	pthread->regs.cs = cs;
-	pthread->regs.fs = fs;
-	pthread->regs.ss = ss;
-	pthread->regs.gs = gs;
-	pthread->regs.rip = rip;
-	pthread->regs.rsp = rsp;
-	pthread->regs.eflags = flags;
-	pthread->ticks = pthread->priority = priority;
-	tid ++;
+	return pthread;
 }
 
-static inline THREAD* createThread(T8 rpl, T64 rip, T64 rsp, T64 flags, T64 priority) {
-	return createThread(
-			((8 * INDEX_USER_C) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
-			, ((8 * INDEX_USER_RW) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
-			, ((8 * INDEX_USER_RW) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
-            , (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl
-			, rip, rsp, flags, priority
-			);
+static inline THREAD* createThread(T8 rpl, T64 rip, T64 stackSize, T64 flags, T64 priority) {
+	void* rsp = kmalloc(STACK_SIZE);
+	if (rsp != NULL) {
+		(*(long*)(void*)&rsp) += stackSize;
+		return _createThread(
+				((8 * INDEX_USER_C) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
+				, ((8 * INDEX_USER_RW) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
+				, ((8 * INDEX_USER_RW) & SA_RPL_MASK & SA_TI_MASK) | SA_TIG | rpl
+				, (SELECTOR_KERNEL_GS & SA_RPL_MASK) | rpl
+				, rip, (T64)rsp, flags, priority
+		);
+	}
+    disp_color_str(RED, "alloc stack failed/n");
+	return NULL;
 }
 
 static inline PUBLIC PROCESS* createProcess(T64 pml4e, char* p_name, T64 priority, T64 nr_tty) {
 	PROCESS* p = (PROCESS*)kmalloc(sizeof(PROCESS));
-	p->pml4e = pml4e;
-	p->pid = pid;
-	p->p_name = p_name;
-	p->priority = priority;
-	p->nr_tty = nr_tty;
-	p->threads = NULL;
-	pid++;
+	if (p != NULL) {
+        p->pml4e = pml4e;
+        p->pid = pid;
+        p->p_name = p_name;
+        p->priority = priority;
+        p->nr_tty = nr_tty;
+        p->threads = NULL;
+        pid++;
+	} else {
+        disp_color_str(RED, "create process fill/n");
+	}
 	return p;
 }
 
-static inline void attachThread(PROCESS* process, THREAD* thread) {
-
+static inline BOOL attachThread(PROCESS* process, THREAD* thread) {
+	if (
+			(process != NULL)
+			&& (thread != NULL)
+			&& linkCreateAppend_data(&(process->threads), (void*)thread)
+			&& linkAppend_date(&thread_ready_link, (void*)thread)
+		) {
+		thread->pprocess = process;
+		return TRUE;
+	}
+    disp_color_str(RED, "attach thread fill/n");
+	return FALSE;
 }
 #endif /* _FOS_PROC_H_ */

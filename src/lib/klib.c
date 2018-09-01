@@ -5,7 +5,7 @@
 PUBLIC char* itoa(char *str, int num) {
     char* p = str;
     char ch;
-    Tbool flag = FALSE;
+    BOOL flag = FALSE;
 
     *p++ = '0';
     *p++ = 'x';
@@ -31,7 +31,7 @@ PUBLIC char* itoa(char *str, int num) {
 PUBLIC char* ltoa(char *str, T64 num) {
     char* p = str;
     char ch;
-    Tbool flag = FALSE;
+    BOOL flag = FALSE;
 
     *p++ = '0';
     *p++ = 'x';
@@ -55,6 +55,7 @@ PUBLIC char* ltoa(char *str, T64 num) {
 }
 
 
+
 PUBLIC void disp_int(int v) {
     char str[16];
     memset(str, 0, 16);
@@ -69,6 +70,19 @@ PUBLIC void disp_T64(T64 v) {
     disp_str(str);
 }
 
+PUBLIC void disp_int_pos(int v, unsigned pos) {
+    char str[16];
+    memset(str, 0, 16);
+    itoa(str, v);
+    disp_str_pos(str, pos);
+}
+
+PUBLIC void disp_T64_pos(T64 v, unsigned pos) {
+    char str[32];
+    memset(str, 0, 32);
+    ltoa(str, v);
+    disp_str_pos(str, pos);
+}
 
 /*PUBLIC void delay(int time) {
     int i, j, k;

@@ -2,44 +2,34 @@
 #include "global.h"
 #include "mm.h"
 
-pid = 0;
-tid = 0;
-
-PUBLIC PROCESS* createProcess(T64 pml4e, char* p_name, T64 priority, T64 nr_tty) {
-	PROCESS* p = (PROCESS*)kmalloc(sizeof(PROCESS));
-	p->pml4e = pml4e;
-	p->pid = pid;
-	p->p_name = p_name;
-	p->priority = priority;
-	p->nr_tty = nr_tty;
-	p->threads = NULL;
-	pid++;
-	return p;
-}
-
+T64 pid = (T64)0;
+T64 tid = (T64)0;
 
 PUBLIC unsigned int sys_get_ticks() {
     return ticks;
 }
 
 PUBLIC void schedule() {
-    THREAD*    p;
     int         gticks = 0;
 
     while (!gticks){
-        for (p = proc_table; p < proc_table + NR_TASKS + NR_PROCS; p++) {
+        LINK_NODE*  node = thread_ready_link.data;
+        while (node != NULL) {
+            THREAD* p = (THREAD*)(node->data);
             if (p->ticks > gticks) {
                 gticks = p->ticks;
                 p_proc_ready = p;
             }
+            node = node->next;
         }
         
         if (!gticks) {
-            for (p = proc_table; p < proc_table + NR_TASKS + NR_PROCS; p++) {
+            node = thread_ready_link.data;
+            while (node != NULL) {
+                THREAD* p = (THREAD*)(node->data);
                 p->ticks = p->priority;
+                node = node->next;
             }
         }
     }
 }
-
-

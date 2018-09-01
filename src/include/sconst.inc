@@ -1,4 +1,4 @@
-P_STACKBASE     equ 0
+P_STACKBASE     equ 8
 GSREG           equ P_STACKBASE
 FSREG           equ GSREG           + 8
 R15REG          equ FSREG           + 8

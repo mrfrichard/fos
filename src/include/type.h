@@ -10,7 +10,7 @@ typedef unsigned int     T32;
 typedef unsigned short   T16;
 typedef unsigned char    T8;
 typedef unsigned int     TPort;
-typedef char             Tbool;
+typedef char             BOOL;
 
 typedef void (*IntHandler)();
 typedef void (*TaskFun)();

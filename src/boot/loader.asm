@@ -22,18 +22,18 @@ _secondHd:   times 10h db 0
 %include "fat12hdr.inc"
 %include "pm.inc"
 
-LABEL_GDT:              Descriptor  0,          0,                  0               ; ¿ÕÃèÊö·û
-LABEL_DESC_FLAT_C:      Descriptor  0,          0fffffh,            DA_CR | DA_32 | DA_LIMIT_4K  ; 0-4G ¿ÉÖ´ÐÐ¶Î
-LABEL_DESC_FLAT_RW:     Descriptor  0,          0fffffh,            DA_DRW | DA_32 | DA_LIMIT_4K    ; 0-4G ¿É¶ÁÐ´¶Î
-LABEL_DESC_VIDEO:       Descriptor  0B8000h,    07fffh,             DA_DRW | DA_DPL3         ; ÏÔ´æÊ×µØÖ·
-GdtLen      equ $ - LABEL_GDT   ; GDT ³¤¶È
+LABEL_GDT:              Descriptor  0,          0,                  0               ; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+LABEL_DESC_FLAT_C:      Descriptor  0,          0fffffh,            DA_CR | DA_32 | DA_LIMIT_4K  ; 0-4G ï¿½ï¿½Ö´ï¿½Ð¶ï¿½
+LABEL_DESC_FLAT_RW:     Descriptor  0,          0fffffh,            DA_DRW | DA_32 | DA_LIMIT_4K    ; 0-4G ï¿½É¶ï¿½Ð´ï¿½ï¿½
+LABEL_DESC_VIDEO:       Descriptor  0B8000h,    07fffh,             DA_DRW | DA_DPL3         ; ï¿½Ô´ï¿½ï¿½×µï¿½Ö·
+GdtLen      equ $ - LABEL_GDT   ; GDT ï¿½ï¿½ï¿½ï¿½
 
-LABEL_GDT64:            Descriptor  0,          0,                  0               ; ¿ÕÃèÊö·û
-LABEL_DESC64_FLAT_C:    Descriptor  0,          0fffffh,            DA_CR | DA_64 | DA_LIMIT_4K; 0-4G ¿ÉÖ´ÐÐ¶Î
-LABEL_DESC64_FLAT_RW:   Descriptor  0,          0fffffh,            DA_DRW | DA_64 | DA_LIMIT_4K; 0-4G ¿É¶ÁÐ´¶Î
-LABEL_DESC64_VIDEO:     Descriptor  0B8000h,    07fffh,             DA_DRW | DA_DPL3         ; ÏÔ´æÊ×µØÖ·
-LABEL_DESC64_USER_C:    Descriptor  0,          0fffffh,            DA_CR | DA_64 | DA_LIMIT_4K | DA_DPL3; 0-4G ¿ÉÖ´ÐÐ¶Î
-LABEL_DESC64_USER_RW:   Descriptor  0,          0fffffh,            DA_DRW | DA_64 | DA_LIMIT_4K | DA_DPL3; 0-4G ¿É¶ÁÐ´¶Î
+LABEL_GDT64:            Descriptor  0,          0,                  0               ; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+LABEL_DESC64_FLAT_C:    Descriptor  0,          0fffffh,            DA_CR | DA_64 | DA_LIMIT_4K; 0-4G ï¿½ï¿½Ö´ï¿½Ð¶ï¿½
+LABEL_DESC64_FLAT_RW:   Descriptor  0,          0fffffh,            DA_DRW | DA_64 | DA_LIMIT_4K; 0-4G ï¿½É¶ï¿½Ð´ï¿½ï¿½
+LABEL_DESC64_VIDEO:     Descriptor  0B8000h,    07fffh,             DA_DRW | DA_DPL3         ; ï¿½Ô´ï¿½ï¿½×µï¿½Ö·
+LABEL_DESC64_USER_C:    Descriptor  0,          0fffffh,            DA_CR | DA_64 | DA_LIMIT_4K | DA_DPL3; 0-4G ï¿½ï¿½Ö´ï¿½Ð¶ï¿½
+LABEL_DESC64_USER_RW:   Descriptor  0,          0fffffh,            DA_DRW | DA_64 | DA_LIMIT_4K | DA_DPL3; 0-4G ï¿½É¶ï¿½Ð´ï¿½ï¿½
 GdtLen64      equ $ - LABEL_GDT64   ;
 
 GdtPtr      dw  GdtLen
@@ -41,7 +41,7 @@ GdtPtr      dw  GdtLen
 GdtPtr64    dw  GdtLen64
             dq  BaseOfLoaderPhyAddr + LABEL_GDT64
 
-; GDT Ñ¡Ôñ×Ó
+; GDT Ñ¡ï¿½ï¿½ï¿½ï¿½
 SelectorFlatC   equ LABEL_DESC_FLAT_C - LABEL_GDT
 SelectorFlatRW  equ LABEL_DESC_FLAT_RW - LABEL_GDT
 SelectorVideo   equ LABEL_DESC_VIDEO - LABEL_GDT + SA_RPL3
@@ -288,7 +288,7 @@ LABEL_FILE_LOADED:
     mov dh, 1
     call DispStr1
 
-    ; µÃµ½ÄÚ´æÊý
+    ; ï¿½Ãµï¿½ï¿½Ú´ï¿½ï¿½ï¿½
     mov ebx, 0
     mov di, _MemChkBuf
 .loop:
@@ -306,23 +306,23 @@ LABEL_MEM_CHK_FAIL:
     mov dword [_dwMCRNumber], 0
 LABEL_MEM_CHK_OK:
 
-    ; ¼ÓÔØgdtr
+    ; ï¿½ï¿½ï¿½ï¿½gdtr
     lgdt [GdtPtr]
 
-    ; ¹ØÖÐ¶Ï
+    ; ï¿½ï¿½ï¿½Ð¶ï¿½
     cli
 
-    ; ´ò¿ªµØÖ·ÏßA20
+    ; ï¿½ò¿ªµï¿½Ö·ï¿½ï¿½A20
     in al, 92h
     or al, 00000010b
     out 92h, al
 
-    ; ×¼±¸ÇÐ»»µ½±£»¤Ä£Ê½
+    ; ×¼ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
     mov eax, cr0
     or  eax, 1
     mov cr0, eax
 
-    ; ÕæÕý½øÈë±£»¤Ä£Ê½
+    ; ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë±£ï¿½ï¿½Ä£Ê½
     jmp dword SelectorFlatC:(BaseOfLoaderPhyAddr + LABEL_PM_START)
 
 ReadSector:

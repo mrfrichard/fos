@@ -6,10 +6,9 @@
 #include "proc.h"
 #include "clock.h"
 
-
 PUBLIC void clock_handler(int irq) {
     ticks++;
-//    disp_int(ticks);
+
     p_proc_ready->ticks--;
     if (k_reenter != 0) {
         return;

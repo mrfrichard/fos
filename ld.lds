@@ -16,7 +16,7 @@ SECTIONS {
 	 	*(.bss)
 	 }
 	 
-	.data 0xffff880000050000: {
+	.data 0xffff880000030000: {
 		*(.data)
 	}
 	.got : {

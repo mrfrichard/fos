@@ -83,8 +83,8 @@ _start:
 csinit:
 
     sti
-    xor eax, eax
-    mov ax, SELECTOR_TSS
+    xor rax, rax
+    mov rax, SELECTOR_TSS
     ltr ax
     jmp _main
 
@@ -316,6 +316,7 @@ restart:
     mov qword [rel tss + TSS3_S_SP0], rax
 restart_reenter:
     dec dword [rel k_reenter]
+    add rsp, 8
     pop gs
     pop fs
     pop r15

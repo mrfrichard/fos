@@ -31,7 +31,7 @@ PUBLIC void exception_handler (
         , "#NP Segment Not Present"
         , "#SS Stack-segment Fault"
         , "#GP General Protection"
-        , "#PF General Protection"
+        , "#PF Page Fault"
         , "- (Intel reserved. Do not use.)"
         , "#MF x87 FPU Floating-point Error(Math Fault)"
         , "#AC Alignment Check"

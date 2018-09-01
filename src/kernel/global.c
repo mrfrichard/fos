@@ -8,9 +8,9 @@ TASK task_table[NR_TASKS] = {
 };
 
 TASK user_proc_table[NR_PROCS] = {
-    {testA, STACK_SIZE_TESTA, "test_a", 150}
-    , {testB, STACK_SIZE_TESTB, "test_b", 150}
-    , {testC, STACK_SIZE_TESTC, "test_c", 150}
+    {testA, STACK_SIZE, "test_a", 150}
+    , {testB, STACK_SIZE, "test_b", 150}
+    , {testC, STACK_SIZE, "test_c", 150}
 };
 
 

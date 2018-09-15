@@ -2,6 +2,8 @@
 #include "proc.h"
 
 MCS_LOCK* p_mm_lock = NULL;
+T64 totalMemSize;
+MEM_RANGE* p_mem_ranges = NULL;
 
 PUBLIC void* kmalloc(int size) {
     MEM_BLOCK* pblock =  (MEM_BLOCK*)KERNEL_DYNAMIC_MEM_BASE;

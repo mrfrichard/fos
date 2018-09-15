@@ -11,6 +11,7 @@ PUBLIC unsigned int sys_get_ticks() {
 
 PUBLIC void schedule() {
     int         gticks = 0;
+//    disp_str("schedule");
 
     while (!gticks){
         LINK_NODE*  node = thread_ready_link.data;
@@ -21,7 +22,9 @@ PUBLIC void schedule() {
                 p_proc_ready = p;
             }
             node = node->next;
+//            disp_T64(node);
         }
+//        disp_T64(p_proc_ready);
         
         if (!gticks) {
             node = thread_ready_link.data;
@@ -32,4 +35,5 @@ PUBLIC void schedule() {
             }
         }
     }
+//    disp_T64(p_proc_ready);
 }

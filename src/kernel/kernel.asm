@@ -314,9 +314,9 @@ restart:
     mov cr3, rax
     lea rax, [rsp + P_STACKTOP]
     mov qword [rel tss + TSS3_S_SP0], rax
+    add rsp, 8              ; jmp to reserve in STACK_FRAME
 restart_reenter:
     dec dword [rel k_reenter]
-    add rsp, 8
     pop gs
     pop fs
     pop r15

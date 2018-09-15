@@ -71,29 +71,6 @@ MemChkBuf equ BaseOfLoaderPhyAddr + _MemChkBuf
 _dwMCRNumber: db 0
 dwMCRNumber equ BaseOfLoaderPhyAddr + _dwMCRNumber
 
-_ARDStruct:
-_dwBaseAddrLow: dd 0
-_dwBaseAddrHigh: dd 0
-_dwLengthLow: dd 0
-_dwLengthHigh: dd 0
-_dwType: dd 0
-
-ARDStruct equ BaseOfLoaderPhyAddr + _ARDStruct
-dwBaseAddrLow equ BaseOfLoaderPhyAddr + _dwBaseAddrLow
-dwBaseAddrHigh equ BaseOfLoaderPhyAddr + _dwBaseAddrHigh
-dwLengthLow equ BaseOfLoaderPhyAddr + _dwLengthLow
-dwLengthHigh equ BaseOfLoaderPhyAddr + _dwLengthHigh
-dwType equ BaseOfLoaderPhyAddr + _dwType
-
-_dwMemSizeLow: dd 0
-_dwMemSizeHigh: dd 0
-dwMemSizeLow equ BaseOfLoaderPhyAddr + _dwMemSizeLow
-dwMemSizeHigh equ BaseOfLoaderPhyAddr + _dwMemSizeHigh
-dwMemSize equ dwMemSizeLow
-
-_szRAMSize: db "RAM Size", 0
-szRAMSize equ BaseOfLoaderPhyAddr + _szRAMSize
-
 _szReturn: db 0x0a, 0
 szReturn equ BaseOfLoaderPhyAddr + _szReturn
 
@@ -421,69 +398,6 @@ LABEL_PM_START:
     mov ss, ax
     mov esp, TopOfStack
 
-; DispMemSize
-    mov esi, MemChkBuf
-    mov ecx, [dwMCRNumber]
-
-.loop:
-    mov edx, 5
-    mov edi, ARDStruct
-.1:
-    push dword [esi]
-    call DispInt
-    pop eax
-    stosd
-    ;mov [edi], eax
-    ;add edi, 4
-    add esi, 4
-    dec edx
-    cmp edx, 0
-    jnz .1
-    call DispReturn
-    cmp dword [dwType], 1
-    jne .2
-    
-    mov eax, [dwBaseAddrLow]
-    add eax, [dwLengthLow]
-    mov ebx, eax
-    mov eax, [dwBaseAddrHigh]
-    jnc .3
-    inc eax
-.3:
-    add eax, [dwLengthHigh] 
-    cmp eax, [dwMemSizeHigh]
-    ja .4
-    cmp ebx, [dwMemSizeLow]
-    jb .2
-.4:
-    mov [dwMemSizeHigh], eax
-    mov [dwMemSizeLow], ebx
-.2:
-    loop .loop
-
-    call DispReturn
-    push szRAMSize
-    call DispStr
-    add esp, 4
-
-    push dword [dwMemSize]
-    push dword [dwMemSize + 4]
-    Call DispInt64
-    add esp, 8
-
-;    call DispReturn
-;    push dword [0xfee00320]
-;    Call DispInt
-;    add esp, 4
-;    call DispReturn
-;    push dword [0xfee00380]
-;    Call DispInt
-;    add esp, 4
-;    call DispReturn
-;    push dword [0xfee00390]
-;    Call DispInt
-;    add esp, 4
-    
 SetupPaging:
 ; setup PML4E
     mov ax, SelectorFlatRW
@@ -519,7 +433,7 @@ SetupPaging:
 ; setup PTE
     mov edi, PTE_Base
     mov eax, PG_P | PG_USU | PG_RWW
-    mov ecx, 0xc0
+    mov ecx, 0x200
 .1:
     stosd
     push eax

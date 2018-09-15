@@ -1,5 +1,4 @@
 #include "type.h"
-//#include "const.h"
 #include "protect.h"
 #include "global.h"
 #include "proto.h"
@@ -8,7 +7,7 @@
 
 
 PUBLIC void cstart() {
-    disp_str("\n\n------------\"cstrt\" begins -----------\n");
+    disp_str("------------\"cstrt\" begins -----------\n");
     memcpy(&gdt, (void*)(*((T64*)(&gdtPtr[2]))), *((T16*)(&gdtPtr[0])));
     T16* p_gdt_limit = (T16*)(&gdtPtr[0]);
     T64* p_gdt_base = (T64*)(&gdtPtr[2]);
@@ -22,7 +21,11 @@ PUBLIC void cstart() {
     *p_idt_base = (T64) & idt;
 
     init_prot();
+    initKernelMem();
     initKernelDynamicMem();
     disp_str("------------\"cstrt\" finished -----------\n");
-
+//    T64* p = (T64*) (KERNEL_BASE + 0x7fef0000);
+//    T64* p = (T64*) (0xfffc);
+//    *p = 0xffff880150000000;
+//    disp_T64(*p);
 }

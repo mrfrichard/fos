@@ -91,7 +91,7 @@ $(FOSKernel) : $(OBJS)
 o/kernel.o : src/kernel/kernel.asm src/include/sconst.inc
 	$(ASM) $(ASMKFLAGS) -o $@ $<
 
-o/start.o : src/kernel/start.c src/include/type.h src/include/protect.h src/include/proto.h src/include/string.h src/include/mm.h
+o/start.o : src/kernel/start.c src/include/type.h src/include/protect.h src/include/proto.h src/include/string.h src/include/mm.h src/include/proto.h src/include/string.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 o/i8259.o : src/kernel/i8259.c src/include/i8259.h src/include/type.h src/include/protect.h src/include/proto.h src/include/global.h src/include/const.h src/include/string.h
@@ -107,13 +107,14 @@ o/main.o : src/kernel/main.c src/include/main.h src/include/type.h src/include/c
 				src/include/string.h src/include/mm.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-o/proc.o : src/kernel/proc.c src/include/proc.h src/include/type.h src/include/const.h src/include/protect.h src/include/global.h src/include/mm.h src/include/link.h
+o/proc.o : src/kernel/proc.c src/include/proc.h src/include/type.h src/include/const.h src/include/protect.h src/include/global.h src/include/mm.h src/include/link.h \
+				src/include/proto.h src/include/string.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 o/clock.o : src/kernel/clock.c src/include/clock.h src/include/type.h src/include/const.h src/include/protect.h src/include/global.h src/include/proto.h  src/include/i8259.h src/include/proc.h 
 	$(CC) $(CFLAGS) -o $@ $<
 
-o/mm.o : src/kernel/mm.c src/include/mm.h src/include/type.h src/include/const.h src/include/proto.h src/include/proc.h
+o/mm.o : src/kernel/mm.c src/include/mm.h src/include/type.h src/include/const.h src/include/proto.h src/include/proc.h src/include/string.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 o/klib.o : src/lib/klib.asm
